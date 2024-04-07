@@ -65,12 +65,13 @@ trait ElasticquentTrait
     }
 
     /**
-     * Get Type Name
+     * Get Index Name
      *
      * @return string
      */
-    public function getTypeName()
+    public function getIndexName()
     {
+        // We treat each table as an index in its own right.
         return $this->getTable();
     }
 
@@ -268,7 +269,7 @@ trait ElasticquentTrait
     /**
      * Search
      *
-     * Simple search using a match _all query
+     * Simple search using what used to be a match _all query
      *
      * @param string $term
      *
@@ -280,7 +281,7 @@ trait ElasticquentTrait
 
         $params = $instance->getBasicEsParams();
 
-        $params['body']['query']['match']['_all'] = $term;
+        $params['body']['query']['query_string']['query'] = $term;
 
         $result = $instance->getElasticSearchClient()->search($params);
 
@@ -370,7 +371,6 @@ trait ElasticquentTrait
     {
         $params = array(
             'index' => $this->getIndexName(),
-            'type' => $this->getTypeName(),
         );
 
         if ($getIdIfPossible && $this->getKey()) {
@@ -449,6 +449,8 @@ trait ElasticquentTrait
     {
         $instance = new static;
 
+        $client = $instance->getElasticSearchClient();
+
         $mapping = $instance->getBasicEsParams();
 
         $params = array(
@@ -456,9 +458,9 @@ trait ElasticquentTrait
             'properties' => $instance->getMappingProperties(),
         );
 
-        $mapping['body'][$instance->getTypeName()] = $params;
+        $mapping['body'] = $params;
 
-        return $instance->getElasticSearchClient()->indices()->putMapping($mapping);
+        return $client->indices()->putMapping($mapping);
     }
 
     /**
@@ -531,13 +533,15 @@ trait ElasticquentTrait
 
         $mappingProperties = $instance->getMappingProperties();
         if (!is_null($mappingProperties)) {
-            $index['body']['mappings'][$instance->getTypeName()] = [
+            $index['body']['mappings'] = [
                 '_source' => array('enabled' => true),
                 'properties' => $mappingProperties,
             ];
         }
 
-        return $client->indices()->create($index);
+        $response = $client->indices()->create($index);
+
+        return $response->asArray();
     }
 
     /**
@@ -555,7 +559,9 @@ trait ElasticquentTrait
             'index' => $instance->getIndexName(),
         );
 
-        return $client->indices()->delete($index);
+        $response = $client->indices()->delete($index);
+
+        return $response->asArray();
     }
 
     /**
@@ -565,13 +571,15 @@ trait ElasticquentTrait
      *
      * @return bool
      */
-    public static function typeExists()
+    public static function exists()
     {
         $instance = new static;
 
         $params = $instance->getBasicEsParams();
 
-        return $instance->getElasticSearchClient()->indices()->existsType($params);
+        $response = $instance->getElasticSearchClient()->indices()->exists($params);
+
+        return $response;
     }
 
     /**
@@ -586,13 +594,13 @@ trait ElasticquentTrait
     public function newFromHitBuilder($hit = array())
     {
         $key_name = $this->getKeyName();
-        
+
         $attributes = $hit['_source'];
 
         if (isset($hit['_id'])) {
             $attributes[$key_name] = is_int($hit['_id']) ? intval($hit['_id']) : $hit['_id'];
         }
-        
+
         // Add fields to attributes
         if (isset($hit['fields'])) {
             foreach ($hit['fields'] as $key => $value) {
@@ -621,11 +629,12 @@ trait ElasticquentTrait
     /**
      * Create a elacticquent result collection of models from plain elasticsearch result.
      *
-     * @param  array  $result
+     * @param  object  $result
      * @return \Elasticquent\ElasticquentResultCollection
      */
-    public static function hydrateElasticsearchResult(array $result)
+    public static function hydrateElasticsearchResult(object $result)
     {
+      $result = $result->asArray();
         $items = $result['hits']['hits'];
         return static::hydrateElasticquentResult($items, $meta = $result);
     }
@@ -685,7 +694,7 @@ trait ElasticquentTrait
         $items = array_map(function ($item) use ($instance, $parentRelation) {
             // Convert all null relations into empty arrays
             $item = $item ?: [];
-            
+
             return static::newFromBuilderRecursive($instance, $item, $parentRelation);
         }, $items);
 

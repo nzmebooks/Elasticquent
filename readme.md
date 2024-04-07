@@ -8,7 +8,7 @@ Elasticquent uses the [official Elasticsearch PHP API](https://github.com/elasti
 
 # Elasticsearch Requirements
 
-You must be running _at least_ Elasticsearch 1.0. Elasticsearch 0.9 and below *will not work* and are not supported.
+You must be running _at least_ Elasticsearch 7.0. Elasticsearch 6 and below *will not work* and are not supported.
 
 ## Contents
 
@@ -65,7 +65,7 @@ Check out the rest of the documentation for how to get started using Elasticsear
 
 ### How Elasticquent Works
 
-When using a database, Eloquent models are populated from data read from a database table. With Elasticquent, models are populated by data indexed in Elasticsearch. The whole idea behind using Elasticsearch for search is that its fast and light, so you model functionality will be dictated by what data has been indexed for your document.
+When using a database, Eloquent models are populated from data read from a database table, with each table treated as a separate Elasticsearch index. With Elasticquent, models are populated by data indexed in Elasticsearch. The whole idea behind using Elasticsearch for search is that its fast and light, so you model functionality will be dictated by what data has been indexed for your document.
 
 ## Setup
 
@@ -101,6 +101,13 @@ use Elasticquent\ElasticquentTrait;
 class Book extends Eloquent
 {
     use ElasticquentTrait;
+
+    /**
+     * The database table used by the model.
+     *
+     * @var string
+     */
+    protected $table = 'books';
 }
 ```
 
@@ -134,17 +141,6 @@ return array(
         'hosts'     => ['localhost:9200'],
         'retries'   => 1,
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Index Name
-    |--------------------------------------------------------------------------
-    |
-    | This is the index name that Elastiquent will use for all
-    | Elastiquent models.
-    */
-
-    'default_index' => 'my_custom_index_name',
 
 );
 
@@ -245,52 +241,28 @@ You can also get the type mapping and check if it exists.
 
 ### Setting a Custom Index Name
 
-By default, Elasticquent will look for the `default_index` key within your configuration file(`config/elasticquent.php`). To set the default value for an index being used, you can edit this file and set the `default_index` key:
+Elasticquent will look for the `$table` field within your model.
 
 ```php
-return array(
+use Elasticquent\ElasticquentTrait;
 
-   // Other configuration keys ...
-   
-   /*
-    |--------------------------------------------------------------------------
-    | Default Index Name
-    |--------------------------------------------------------------------------
-    |
-    | This is the index name that Elastiquent will use for all
-    | Elastiquent models.
-    */
-    
-   'default_index' => 'my_custom_index_name',
-);
-```
-
-If you'd like to have a more dynamic index, you can also override the default configuration with a `getIndexName` method inside your Eloquent model:
-
-```php
-function getIndexName()
+class Book extends Eloquent
 {
-    return 'custom_index_name';
+    use ElasticquentTrait;
+
+    /**
+     * The database table used by the model.
+     *
+     * @var string
+     */
+    protected $table = 'books';
 }
 ```
 
-Note: If no index was specified, Elasticquent will use a hardcoded string with the value of `default`.
-
-### Setting a Custom Type Name
-
-By default, Elasticquent will use the table name of your models as the type name for indexing. If you'd like to override it, you can with the `getTypeName` function.
+To check if the index for the Elasticquent model exists yet, use `exists`:
 
 ```php
-function getTypeName()
-{
-    return 'custom_type_name';
-}
-```
-
-To check if the type for the Elasticquent model exists yet, use `typeExists`:
-
-```php
-    $typeExists = Book::typeExists();
+    $exists = Book::exists();
 ```
 
 ## Indexing Documents
