@@ -9,19 +9,19 @@ trait ElasticquentConfigTrait
      *
      * @return string
      */
-    public function getIndexName()
-    {
-        // The first thing we check is if there is an elasticquent
-        // config file and if there is a default index.
-        $index_name = $this->getElasticConfig('default_index');
+    // public function getIndexName()
+    // {
+    //     // The first thing we check is if there is an elasticquent
+    //     // config file and if there is a default index.
+    //     $index_name = $this->getElasticConfig('default_index');
 
-        if (!empty($index_name)) {
-            return $index_name;
-        }
+    //     if (!empty($index_name)) {
+    //         return $index_name;
+    //     }
 
-        // Otherwise we will just go with 'default'
-        return 'default';
-    }
+    //     // Otherwise we will just go with 'default'
+    //     return 'default';
+    // }
 
     /**
      * Get the Elasticquent config
@@ -69,7 +69,7 @@ trait ElasticquentConfigTrait
      * Get the config path and file name to use when Laravel framework isn't present
      * e.g. using Eloquent stand-alone or running unit tests
      *
-     * @return string config file path 
+     * @return string config file path
      */
     protected function getConfigFile()
     {

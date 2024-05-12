@@ -18,15 +18,4 @@ return array(
         'retries'   => 1,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Index Name
-    |--------------------------------------------------------------------------
-    |
-    | This is the index name that Elasticquent will use for all
-    | Elasticquent models.
-    */
-
-    'default_index' => 'my_custom_index_name',
-
 );
