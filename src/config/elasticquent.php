@@ -14,7 +14,12 @@ return array(
     */
 
     'config' => [
-        'hosts'     => ['localhost:9200'],
+        'Hosts'     => ['localhost:9200'],
+        'BasicAuthentication' => [
+          env('ELASTIC_USERNAME', 'elastic'),
+          env('ELASTIC_PASSWORD', '')
+        ],
+        'SSLVerification' => false,
         'retries'   => 1,
     ],
 

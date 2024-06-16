@@ -138,8 +138,13 @@ return array(
     */
 
     'config' => [
-        'hosts'     => ['localhost:9200'],
-        'retries'   => 1,
+        'Hosts'     => ['localhost:9200'],
+        'BasicAuthentication' => [
+          env('ELASTIC_USERNAME', 'elastic'),
+          env('ELASTIC_PASSWORD', '')
+        ],
+        'SSLVerification' => false,
+        'Retries'   => 1,
     ],
 
 );
